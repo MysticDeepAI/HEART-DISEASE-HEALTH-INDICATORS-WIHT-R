@@ -17,4 +17,4 @@ This project aims to develop a binary classification model to predict the probab
 - **Handling Imbalance**: The elimination of imbalanced features was justified, and appropriate techniques were applied to balance the classes, contributing to improved model predictive capability.
 
 ## Project explanation
-In the link [Youtube](https://youtu.be/u65J8Rdlb14)
+In the link [Youtube](https://youtu.be/EZjzfQCmtfo)
