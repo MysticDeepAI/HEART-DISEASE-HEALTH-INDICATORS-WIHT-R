@@ -1,0 +1,1046 @@
+---
+title: "HEART DISEASE HEALTH INDICATORS"
+author: "Gilber Alexis Corrales"
+date: "2024-06-07"
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(formattable)
+library(dplyr)
+library(polycor)
+library(formattable)
+library(ggplot2)
+library(GGally)
+library(caret)
+library(pROC)
+library(lmtest)
+```
+
+```{=html}
+<style>
+body {
+  text-align: justify;
+}
+
+h2 {
+  text-align: center;
+}
+</style>
+```
+## INTRODUCCIÓN
+
+La enfermedad cardíaca es una de las enfermedades crónicas más comunes
+en los Estados Unidos, afectando a millones de personas anualmente y
+representando una carga económica considerable. Solo en Estados Unidos,
+las enfermedades cardíacas resultan en aproximadamente 647,000 muertes
+al año, siendo la principal causa de fallecimientos. Entre las
+principales causas y factores de riesgo de la enfermedad cardíaca se
+encuentran la acumulación de placas en las arterias coronarias, los
+cambios moleculares relacionados con el envejecimiento, la inflamación
+crónica, la hipertensión y la diabetes.
+
+A pesar de los distintos tipos de enfermedad coronaria, la mayoría de
+las personas solo descubren que la padecen después de experimentar
+síntomas como dolor en el pecho, un ataque cardíaco o un paro cardíaco
+repentino. Este hecho subraya la importancia de las medidas preventivas
+y las pruebas que puedan predecir de manera precisa la enfermedad
+cardíaca antes de que ocurran eventos negativos como los infartos de
+miocardio.
+
+Los Centros para el Control y la Prevención de Enfermedades (CDC) han
+identificado la hipertensión, el colesterol alto y el tabaquismo como
+tres factores de riesgo clave de la enfermedad cardíaca. Aproximadamente
+la mitad de los estadounidenses presentan al menos uno de estos tres
+factores de riesgo. Además, el Instituto Nacional del Corazón, los
+Pulmones y la Sangre destaca una gama más amplia de factores, como la
+edad, el entorno y la ocupación, los antecedentes familiares y la
+genética, los hábitos de vida, otras condiciones médicas, la raza o el
+origen étnico y el sexo, para que los médicos los consideren en el
+diagnóstico de la enfermedad coronaria. El diagnóstico generalmente se
+basa en un análisis inicial de estos factores de riesgo comunes, seguido
+de pruebas de sangre y otras.
+
+El Sistema de Vigilancia de Factores de Riesgo del Comportamiento
+(BRFSS) es una encuesta telefónica sobre salud que los CDC llevan a cabo
+anualmente. Cada año, se recogen respuestas de más de 400,000
+estadounidenses sobre conductas de riesgo relacionadas con la salud,
+enfermedades crónicas y el uso de servicios preventivos. Esta encuesta
+se ha realizado de manera ininterrumpida desde 1984. Para este proyecto,
+se utilizó el conjunto de datos adaptado del registro generado por el
+BRFSS en el año 2015. Este conjunto original contiene respuestas de
+441,455 personas y cuenta con 330 características. Estas características
+consisten en preguntas formuladas directamente a los participantes o
+variables calculadas en función de sus respuestas individuales. Tras la
+adaptación y filtrado, se obtuvieron un total de 253,680 respuestas a la
+encuesta del BRFSS 2015, resumidas en 22 características para realizar
+una clasificación binaria de el presentar un araque al corazón, este
+cojunto fue extraido de
+[1](https://www.kaggle.com/datasets/alexteboul/heart-disease-health-indicators-dataset?resource=download&select=heart_disease_health_indicators_BRFSS2015.csv),[2](https://www.kaggle.com/datasets/cdc/behavioral-risk-factor-surveillance-system).
+A continuación, se explican cada una de las características:
+
+-   **HeartDiseaseorAttack**: Encuestados que alguna vez informaron
+    haber padecido una enfermedad cardíaca o ataque al corazon
+-   **HighBP**: Adultos a quienes un médico, enfermera u otros
+    profesionales de la salud les han dicho que tienen presión arterial
+    alta.
+-   **HighChol**: ¿alguna vez un médico, enfermera u otro profesional de
+    la salud le ha dicho que su colesterol en sangre es alto?
+-   **CholCheck**: Control de colesterol en los últimos cinco años
+-   **BMI**: Indicce de masa corporal
+-   **Smoker**: ¿Has fumado al menos 100 cigarrillos en toda tu vida?
+-   **Stroke**: Alguna vez has tenido derrame cerebral
+-   **Diabetes**: Presentas diabetes
+-   **PhysActivity**: Adultos que informaron haber realizado actividad
+    física o ejercicio durante los últimos 30 días fuera de su trabajo
+    habitual
+-   **Fruits**: Consume fruta 1 o más veces al día.
+-   **Veggies**: Consume verduras 1 o más veces al día.
+-   **HvyAlcoholConsump**: Hombres adultos que toman más de 14 tragos
+    por semana y mujeres adultas que toman más de 7 tragos por semana
+-   **AnyHealthcare**: ¿Tiene algún tipo de cobertura de atención
+    médica, incluido seguro médico, planes prepagos como HMO o planes
+    gubernamentales como Medicareo Indian Health Service?
+-   **NoDocbcCost**: ¿Hubo algún momento en los últimos 12 meses en el
+    que necesitó ver a un médico pero no pudo debido al costo?
+-   **GenHlth**: Diría usted que en general su salud es
+-   **MentHlth**: Ahora, pensando en su salud mental, que incluye
+    estrés, depresión y problemas emocionales, ¿durante cuántos días
+    durante los últimos 30 días su salud mental no fue buena?
+-   **PhysHlth**: Ahora, pensando en su salud física, que incluye
+    enfermedades y lesiones físicas, ¿durante cuántos días durante los
+    últimos 30 días su salud física no fue buena?
+-   **DiffWalk**: ¿Tiene serias dificultades para caminar o subir
+    escaleras?
+-   **Sex**: Sexo
+-   **Age**: Edad
+-   **Education**:¿Cuál es el grado o año escolar más alto que completó?
+-   **Income**: ¿Los ingresos anuales de su hogar provienen de todas las
+    fuentes?
+
+A continuación se presenta un resumen para visualizar la estructura de
+los datos organizaos en una tabla que representan a los 10 primeros
+valores.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+# Leer el archivo CSV
+data <- read_csv("dataset.csv")
+
+mi_data_subset <- head(data, 10)
+
+colors <- c("#FFB3BA", "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF", "#FFDFD3", "#D3FFDF", "#FFDFE7", "#FFD3FF", "#DFD3FF", "#FFB3BA", "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF", "#FFDFD3", "#D3FFDF", "#FFDFE7", "#FFD3FF", "#DFD3FF", "#FFB3BA", "#FFDFBA")
+
+# Crear la tabla formateada
+formattable(mi_data_subset, 
+            align = rep("c", ncol(mi_data_subset)),
+            list(
+              `HeartDiseaseorAttack` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[1])),
+              `HighBP` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[2])),
+              `HighChol` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[3])),
+              `CholCheck` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[4])),
+              `BMI` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[5])),
+              `Smoker` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[6])),
+              `Stroke` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[7])),
+              `Diabetes` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[8])),
+              `PhysActivity` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[9])),
+              `Fruits` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[10])),
+              `Veggies` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[11])),
+              `HvyAlcoholConsump` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[12])),
+              `AnyHealthcare` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[13])),
+              `NoDocbcCost` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[14])),
+              `GenHlth` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[15])),
+              `MentHlth` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[16])),
+              `PhysHlth` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[17])),
+              `DiffWalk` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[18])),
+              `Sex` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[19])),
+              `Age` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[20])),
+              `Education` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[21])),
+              `Income` = formatter("span", style = ~ style(display = "block", "border-right" = "1px solid #ddd", background = colors[22])),
+              area(row = 0) ~ formatter("span", style = ~ style(color = "white", font.weight = "bold", background = "blue"))
+            ))
+```
+
+## OBJETIVOS DEL ANALISIS DE DATOS
+
+Objetivo general Desarollar un modelo de clasificación binaria que
+prediga la probabilidad de padecer un ataque cardiaco
+
+Objetivo especifico \* Analizar el conjunto de datos por medio de las
+tecnicas de AED \* Definir las caractreiticas que mejor representen la
+dinamica del conjunto de datos \* Establecer el modelo que mejor
+desempeño tengoa para el conjunto de datos
+
+## ANALISIS EXPLORATORIO
+
+# Analisis de indicadores resumen
+
+Del conjunto datos analizaremos primero cuales variables son categoricas
+y numericas por medio de la siguiente tabla.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+classify_variables <- function(data) {
+  # Crear un dataframe para almacenar los resultados
+  variable_types <- data.frame(Variable = names(data), Type = rep("Numeric", ncol(data)), stringsAsFactors = FALSE)
+  
+  # Recorrer cada columna del dataframe
+  for (i in seq_along(data)) {
+    # Obtener los valores únicos
+    unique_values <- unique(data[[i]])
+    
+    # Criterios para considerar una variable como categórica
+    if (length(unique_values) <= 10 && all(unique_values == floor(unique_values))) {
+      variable_types$Type[i] <- "Categorical"
+    }
+  }
+  
+  # Retornar el dataframe de resultados
+  return(variable_types)
+}
+
+categ_numer_data <-classify_variables(data)
+
+formattable(categ_numer_data)
+
+```
+
+Continuaremos esta sección con un analisis estadistico que se enfoca en
+la extración de las medidas de tendencia central, con el animo de
+encontrar posbiles valores atipicos
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+clean_names <- function(matrix_data) {
+  # Aplicar gsub para eliminar las etiquetas específicas de cada elemento
+  cleaned_data <- apply(matrix_data, c(1, 2), function(x) {
+    gsub("Min\\.\\s*:\\s*|1st Qu\\.\\s*:\\s*|Median\\s*:\\s*|Mean\\s*:\\s*|3rd Qu\\.\\s*:\\s*|Max\\.\\s*:\\s*", "", x)
+  })
+  return(cleaned_data)
+}
+
+
+summary_data <- summary(data)
+
+summary_df <- as.data.frame.matrix(summary_data)
+
+summary_df <- clean_names(summary_df)
+
+summary_df <- t(summary_df)
+
+sd_data <- t(round(sapply(data, sd, na.rm = TRUE),digits = 4))
+
+summary_df <- cbind(summary_df, t(sd_data))
+
+colnames(summary_df) <- c("Min", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max","Stan. Dev")
+
+formattable(as.data.frame(summary_df))
+
+
+```
+
+Teniendo en cuenta las variables numericas, se verifico cuales variables
+presetan un valor minimo y un valor maximo fuera del cuartil 1 y el
+cuartil 3, las variables encontradas son BMI, MentHlth, PhysHlth y Age,
+procederemos a graficarlas para ver que tantos valores se encuentran por
+fuera de estos cuartiles.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+par(mfrow = c(2, 2))  # Establece la disposición en 2 filas y 2 columnas
+
+# Crear un boxplot para BMI
+boxplot(data$BMI, 
+        main = "Índice de Masa Corporal (BMI)", 
+        ylab = "BMI", 
+        col = "gold", 
+        outline = TRUE)
+
+# Crear un boxplot para MentHlth
+boxplot(data$MentHlth, 
+        main = "Días con Salud Mental no Buena", 
+        ylab = "Días", 
+        col = "skyblue", 
+        outline = TRUE)
+
+# Crear un boxplot para PhysHlth
+boxplot(data$PhysHlth, 
+        main = "Días con Salud Física no Buena", 
+        ylab = "Días", 
+        col = "lightgreen", 
+        outline = TRUE)
+
+# Crear un boxplot para Age
+boxplot(data$Age, 
+        main = "Edad", 
+        ylab = "Años", 
+        col = "salmon", 
+        outline = TRUE)
+
+# Restaurar la configuración de gráficos a su estado por defecto
+par(mfrow = c(1, 1))
+
+```
+
+
+
+Realizando un analisis encontramos que un caracteristica interesante que
+permitira elimnar algunos valores atipicos es el BIM teniendo en cuenta
+lo plateado por la OMS
+[3](https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations)
+eliminaremos los valores de BIM que superen un 80 y que sean menores que
+10 debido a que son teoricamente imposbiles de presentarse.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+data_update <- subset(data, BMI >= 10 & BMI <= 80)
+
+```
+
+# Analisis de distribución
+
+A continuación presentaremos un digrama de barras para las variables
+categoricas, asi podremos analizar posbiles sesgo en los datos o en su
+defento algunas falencias.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+# Suponemos que tu función classify_variables ya está definida y funciona correctamente
+
+classify_variables <- function(df) {
+  # Crear una lista para almacenar los tipos de variables
+  variable_types <- data.frame(Variable = character(), Type = character(), stringsAsFactors = FALSE)
+  
+  # Clasificar cada columna del dataframe
+  for (col_name in names(df)) {
+    unique_values <- length(unique(df[[col_name]]))
+    
+    # Si el número de valores únicos es pequeño, consideramos la variable como categórica
+    if (unique_values < 10) {  # Puedes ajustar este umbral según tus necesidades
+      variable_types <- rbind(variable_types, data.frame(Variable = col_name, Type = "Categorical"))
+    } else {
+      variable_types <- rbind(variable_types, data.frame(Variable = col_name, Type = "Continuous"))
+    }
+  }
+  
+  return(variable_types)
+}
+
+# Clasificar las variables y extraer solo las categóricas
+variable_types <- classify_variables(data_update)
+categorical_vars <- variable_types$Variable[variable_types$Type == "Categorical"]
+
+# Dividir las variables categóricas en tres grupos
+num_vars <- length(categorical_vars)
+third_index <- ceiling(num_vars / 3)
+first_group <- categorical_vars[1:third_index]
+second_group <- categorical_vars[(third_index + 1):(2 * third_index)]
+third_group <- categorical_vars[(2 * third_index + 1):num_vars]
+
+# Función para crear barplots con porcentajes
+plot_with_percentages <- function(vars_group) {
+    for (var in vars_group) {
+        # Calcular la frecuencia de cada categoría
+        freqs <- table(data[[var]])
+        # Calcular porcentajes
+        percentages <- round(100 * prop.table(freqs), 1)
+        # Crear el diagrama de barras
+        bp <- barplot(freqs,
+                      main = paste("Distribución de", var),
+                      xlab = var,
+                      ylab = "Frecuencia",
+                      col = rainbow(length(freqs)),
+                      ylim = c(0, max(freqs) + max(freqs) * 0.2))  # Ajustar el límite de y para espacio de texto
+        
+        # Añadir texto de porcentajes sobre cada barra
+        text(x = bp, y = freqs + 0.05 * max(freqs), labels = paste(percentages, "%"), pos = 3, cex = 0.8)
+    }
+}
+
+# Configurar y graficar cada grupo en su propia ventana gráfica
+# Primer grupo
+par(mfrow = c(2, 3))
+plot_with_percentages(first_group)
+
+# Segundo grupo
+par(mfrow = c(2, 3))
+plot_with_percentages(second_group)
+
+# Tercer grupo
+par(mfrow = c(2, 3))
+plot_with_percentages(third_group)
+
+# Restaurar la configuración de gráficos a su estado por defecto
+par(mfrow = c(1, 1))
+
+
+```
+
+De estos graficos encontramos un posbile preocupación y es que la
+variable respuesta HeartDiseaseorAttack se encuentra muy desbalanceada
+mas adelante abordaremos este problema, en cuanto a nuestras variables
+predictoras CholCheck, Stroke, HvyAlcoholCosum, AnyHealthcare y
+NoDocbcCost son otro grupo de variables desbalanceadas y representan un
+porcetaje por debado del 8% por consiguiente se toma la decisión de
+eliminarlas de nuestro analisis ya que no represetan una muestra
+considerable de dicha población.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+# Lista de columnas a eliminar
+columns_to_remove <- c("CholCheck", "Stroke", "HvyAlcoholConsump", "AnyHealthcare", "NoDocbcCost")
+
+# Eliminar las columnas del dataset
+data_update <- data_update[, !(names(data_update) %in% columns_to_remove)]
+```
+
+# Analisis de correlación
+
+Teniendo en cuenta que el conjunto de datos contiene datos tanto
+numericos como categoricos se realizara una matriz de correlación
+heterogenea, la cual toma como basde los coeficientes de correlación de
+Pearson para variables continuas, correlaciones policóricas para
+variables categóricas, correlaciones tetracóricas para variables
+categóricas binarias.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+par(mfrow = c(1, 1))
+data_numeric <- as.data.frame(data_update) 
+
+cor_matrix <- hetcor(data_numeric)
+cor_df <- as.data.frame(cor_matrix$correlations)
+
+conditional_format <- formatter("span", 
+                                style = x ~ style(
+                                  display = "block",
+                                  "border-right" = "1px solid #ddd",
+                                  background = ifelse(x > 0.5 | x < -0.5, "lightblue", "white")
+                                ))
+
+tabla_formattable <- formattable(cor_df, lapply(cor_df, function(x) conditional_format))
+
+tabla_formattable
+
+```
+
+En la implementación de esta tabla se subrayo aquellos valores de
+correlación superiores al 0.5 o -0.5, obteniendo que unicamente las
+varialbes GenHlth que representan si el participante se siente
+saludable, se relacióna medianamente fuerte \<0.5 con la variable
+PhysActivity la cual indica la relacción con la persacción de salud
+fisica encontrando una pequeña asociación, por otra parte es notorio que
+las demas variables no cuenta con una relación fuerte lo que puede
+generar dificultades al momento de diseñar el modelo de clasificación.
+
+# Preprocesamiento y partición del conjunto de datos
+
+Para el preprocesamiento se implementa la normalizción de Min-Max donde
+obligaremos a que nuestras variables numericas se encuentren en valores
+entre 0 y 1 lo que genera cierta cohesión en el conjunto de datos, su
+ecuación es:
+
+$$
+X_{\text{norm}} = \frac{X - X_{\text{min}}}{X_{\text{max}} - X_{\text{min}}}
+$$
+
+Donde: - $X$ representa un valor individual de la variable. -
+$X_{\text{min}}$ es el valor mínimo de todos los valores de la
+variable. - $X_{\text{max}}$ es el valor máximo de todos los valores de
+la variable. - $X_{\text{norm}}$ es el valor resultante normalizado.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+min_max_normalize <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+variable_types_update <- classify_variables(data_update)
+
+# Obtener los nombres de las columnas que son numéricas
+numeric_columns <- variable_types_update$Variable[variable_types_update$Type == "Numeric"]
+
+# Aplicar la normalización Min-Max a las columnas numéricas
+data_update[numeric_columns] <- lapply(data_update[numeric_columns], min_max_normalize)
+
+```
+
+Tambien se convertira a las variables categoricas "Dummy" a una
+codificación one-hot-encoding para que sean mejor procesadas por el
+modelo de regresión logistcas a implementar.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+classify_variables_binary <- function(data) {
+    variable_types <- data.frame(Variable = names(data), Type = rep("Numeric", ncol(data)), stringsAsFactors = FALSE)
+    
+    for (i in seq_along(data)) {
+        unique_values <- unique(data[[i]])
+        if (length(unique_values) == 2 && all(unique_values %in% c(0, 1))) {
+            variable_types$Type[i] <- "Binary"
+        } else if (length(unique_values) <= 10) {
+            variable_types$Type[i] <- "Categorical"
+        }
+    }
+    return(variable_types)
+}
+
+
+variable_types_update <- classify_variables_binary(data_update)
+
+# Obtener los nombres de las columnas que son categóricas y no binarias
+categorical_columns <- variable_types_update$Variable[variable_types_update$Type == "Categorical"]
+
+# Convertir cada columna categórica en factor
+for (col_name in categorical_columns) {
+  data_update[[col_name]] <- as.factor(data_update[[col_name]])
+}
+
+# Aplicar one-hot encoding usando caret
+dummies <- dummyVars(~ ., data = data.frame(data_update[categorical_columns]), fullRank = TRUE)
+data_transformed <- predict(dummies, newdata = data.frame(data_update[categorical_columns]))
+
+# Convertir a dataframe
+data_transformed <- data.frame(data_transformed)
+
+data_update <- cbind(data_update[, !(names(data_update) %in% categorical_columns)], data_transformed)
+```
+
+Por ultimo para finalizar el preprocesamiento se particiónan los datos
+en un 70% para datos de entrenamiento y un 70% para validarlos con test
+como F1Score, Accuracy, entre otros.
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+set.seed(123)  # Para reproducibilidad
+trainIndex <- createDataPartition(data_update$HeartDiseaseorAttack, p = 0.7, list = FALSE)
+
+# Crear los datasets de entrenamiento y prueba usando los índices
+trainData <- data_update[trainIndex, ]
+testData <- data_update[-trainIndex, ]
+
+# Verificar la proporción de clases en los conjuntos de entrenamiento y prueba
+table(trainData$HeartDiseaseorAttack)
+table(testData$HeartDiseaseorAttack)
+```
+
+Como podemos observar en la pantalla se tiene para los datos de
+entrenamiento 160660 filas que repretan a personas con
+HeartDiseaseorAttack y 16721 personas que no presetan
+HeartDiseaseorAttack, para los datos de validación tenemos 68868 y 7152
+respectivamente.
+
+## MODELACIÓN POR CLASIFICAICÓN BINARIA
+
+# Analisis del modelo optimizado por Forward
+
+La selección hacia adelante, o forward selection, es un método iterativo
+para construir modelos de regresión que comienza con un modelo nulo y
+agrega variables predictoras una a una. En cada paso, se evalúa el
+impacto de añadir cada variable utilizando el criterio de información de
+Akaike (AIC) y se selecciona la variable que más reduce el AIC. Este
+proceso se repite hasta que no se puede mejorar más el AIC, resultando
+en un modelo optimizado que equilibra el ajuste del modelo (medido por
+la deviance) y su simplicidad, aplicaremos este tipo de optimización
+tomando como referencia el modelo completo con todos las caracteriticas
+y el modelo nulo simplemente con el intercepto, de este proceso se
+obtiene la siguiente tabla:
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+upper_model <- glm( HeartDiseaseorAttack ~ Diabetes.1 + Diabetes.2 + Education.2 + Education.3 + Education.4 + Education.5 + Education.6 + GenHlth.2 + GenHlth.3 + GenHlth.4 + GenHlth.5 + Income.2 + Income.3 + Income.4 + Income.5 + Income.6 + Income.7 + Income.8 + HighBP + HighChol + BMI + Smoker + PhysActivity + Fruits + Veggies + MentHlth + PhysHlth + DiffWalk + Sex + Age,data = trainData,family = binomial)
+
+null_model <- glm(HeartDiseaseorAttack ~ 1, data = trainData, family = binomial())
+
+forward_model <- step(null_model, scope = list(lower = formula(null_model), upper = formula(upper_model)), direction = "forward", trace = FALSE )
+
+backward_model <- step(upper_model, scope = list(lower = formula(null_model), upper = formula(upper_model)), direction = "backward", trace = FALSE )
+
+
+forward_model_ohe<-glm(HeartDiseaseorAttack ~ Age + DiffWalk + HighBP + Sex + HighChol + PhysActivity + Smoker + MentHlth + PhysHlth + Diabetes.1 + Diabetes.2 + Education.2 + Education.3 + Education.4 + Education.5 + Education.6 + GenHlth.2 + GenHlth.3 + GenHlth.4 + GenHlth.5 + Income.2 + Income.3 + Income.4 + Income.5 + Income.6 + Income.7 + Income.8, data = trainData, family = binomial())
+
+backward_model_ohe <-glm(HeartDiseaseorAttack ~ HighBP + HighChol + Smoker + PhysActivity + MentHlth + PhysHlth + DiffWalk + Sex + Age + Diabetes.1 + Diabetes.2 + Education.2 + Education.3 + Education.4 + Education.5 + Education.6 + GenHlth.2 + GenHlth.3 + GenHlth.4 + GenHlth.5 + Income.2 + Income.3 + Income.4 + Income.5 + Income.6 + Income.7 + Income.8, data = trainData, family = binomial() )
+
+
+#AIC
+a_upper_model <- AIC(upper_model)
+a_null_model <- AIC(null_model )
+a_forward_model <- AIC(forward_model)
+a_backward_model <- AIC(backward_model)
+a_forward_model_ohe <- AIC(forward_model_ohe)
+a_backward_model_ohe <- AIC(backward_model_ohe)
+
+#Desviance
+d_upper_model <- upper_model$deviance
+d_null_model <- null_model$deviance 
+d_forward_model <- forward_model$deviance
+d_backward_model <- backward_model$deviance
+d_forward_model_ohe <- forward_model_ohe$deviance
+d_backward_model_ohe <- backward_model_ohe$deviance 
+
+#Formula
+f_upper_model <- paste(deparse(formula(upper_model)), collapse = " ")
+f_null_model <- paste(deparse(formula(null_model)), collapse = " ") 
+f_forward_model <- paste(deparse(formula(forward_model)), collapse = " ")
+f_backward_model <- paste(deparse(formula(backward_model)), collapse = " ")
+f_forward_model_ohe <- paste(deparse(formula(forward_model_ohe)), collapse = " ")
+f_backward_model_ohe <- paste(deparse(formula(backward_model_ohe)), collapse = " ") 
+
+
+forward_info <- data.frame(
+  Modelo = c("Modelo Completo", "Modelo Nulo", "Modelo Forward", "Modelo Forward con one hot encoding"),
+  AIC = c(a_upper_model, a_null_model, a_forward_model ,a_forward_model_ohe ),
+  Deviance = c(d_upper_model, d_null_model, d_forward_model,d_forward_model_ohe  ),
+  Formula = c(f_upper_model, f_null_model, f_forward_model,f_forward_model_ohe ),
+  stringsAsFactors = FALSE )
+
+formattable(forward_info)
+
+```
+
+# Analisis del modelo optimizado por Backward
+
+La selección hacia atrás, o backward selection, es un método iterativo
+para simplificar modelos de regresión que comienza con un modelo
+completo y elimina variables predictoras una a una. En cada paso, se
+evalúa el impacto de eliminar cada variable utilizando el criterio de
+información de Akaike (AIC) y se elimina la variable cuya eliminación
+resulta en la mayor reducción o menor aumento del AIC. Este proceso se
+repite hasta que no se puede mejorar más el AIC, resultando en un modelo
+optimizado que equilibra el ajuste del modelo (medido por la deviance) y
+su simplicidad, aplicaremos el mismo proceso del forward obteniendo la
+siguiente tabla:
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+backward_info <- data.frame(
+  Modelo = c("Modelo Completo", "Modelo Nulo", "Modelo Backward", "Modelo Backward con one hot encoding"),
+  AIC = c(a_upper_model, a_null_model, a_backward_model ,a_backward_model_ohe ),
+  Deviance = c(d_upper_model, d_null_model, d_backward_model,d_backward_model_ohe  ),
+  Formula = c(f_upper_model, f_null_model, f_backward_model,f_backward_model_ohe ),
+  stringsAsFactors = FALSE )
+
+formattable(backward_info)
+```
+
+Encontramos que tramos que la optimización parametrica por el metodo del
+Backward y el Forward dieron como resultado el mismo modelo, por
+consiguiente continuaremos el proceso de analisis con el modelo Forward
+y el modelo Completo debido a que son los modelos con los resultados mas
+bajos de AIC y Deviance, ademas es importante aclarar que al contar con
+variables en formato one hot encoding se completaradon todas las
+variables one hot encoding restantes para los modelos obtenidos en el
+proceso de Backward y el Forward
+
+Analisis por Likelihood Ratio Test.
+
+El test de Likelihood Ratio Test se utiliza para comparar dos modelos
+anidados en regresión, evaluando si la inclusión de variables
+adicionales mejora significativamente el ajuste del modelo. El
+procedimiento implica ajustar ambos modelos (completo y reducido),
+calcular sus verosimilitudes y luego comparar la diferencia multiplicada
+por dos. Esta diferencia sigue una distribución chi-cuadrado con grados
+de libertad iguales a la diferencia en el número de parámetros entre los
+modelos. Un valor p pequeño indica que el modelo completo proporciona un
+ajuste significativamente mejor, justificando la inclusión de las
+variables adicionales, para este prueba nuestro modelo completo sera el
+modelo con todos los parametros y el modelo reducido el modelo Foeward,
+de esto obtenemos el siguiente resultado
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+lr_test <- lrtest(upper_model,forward_model_ohe)
+print(lr_test)
+```
+
+de este resultado encontramos que la comparación entre el modelo
+completo y el modelo forward no es significativa, con un valor p de
+0.6223. Esto sugiere que las variables adicionales BMI, Fruits y Veggies
+incluidas en el modelo completo no mejoran significativamente el ajuste
+del modelo en comparación con el modelo optimizado. Por lo tanto, el
+modelo forward, que incluye solo un subconjunto de las variables, ofrece
+un ajuste similar al modelo completo, indicando que las variables
+adicionales no aportan una mejora sustancial en la capacidad predictiva
+del modelo.
+
+# Validación de los mejores modelos con metricas de desempeño
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#Threshold
+
+calculate_best_threshold <- function(model, data, response_var) {
+  
+  predicted_probs <- predict(model, data, type = "response")
+  
+  roc_curve <- roc(data[[response_var]], predicted_probs)
+  
+  best_threshold <- coords(roc_curve, "best", ret = "threshold", best.method = "youden")
+  
+  return(best_threshold)
+}
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#ROC
+compare_roc_curves <- function(model1, model2, data, response_var) {
+
+  prob_pred1 <- predict(model1, data, type = "response")
+  
+  # Predecir las probabilidades del segundo modelo
+  prob_pred2 <- predict(model2, data, type = "response")
+  
+  # Crear las curvas ROC
+  roc1 <- roc(data[[response_var]], prob_pred1, levels = c("0", "1"))
+  roc2 <- roc(data[[response_var]], prob_pred2, levels = c("0", "1"))
+
+  auc1 <- auc(roc1)
+  auc2 <- auc(roc2)
+  
+  # Graficar las curvas ROC
+  par(mfrow = c(1, 2))  # Configurar el gráfico para dos subplots
+  plot(roc1, main = paste("Curva ROC - Forward modelo (AUC =", round(auc1, 2), ")"), col = "blue", cex.main = 0.8)
+  plot(roc2, main = paste("Curva ROC - Completo modelo (AUC =", round(auc2, 2), ")"), col = "green", cex.main = 0.8)
+  
+  # Restaurar la configuración de gráficos a su estado por defecto
+  par(mfrow = c(1, 1))
+
+}
+
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#TABLE ACCURACY
+calculate_best_threshold <- function(model, data, response_var) {
+  # Predecir las probabilidades del modelo
+  predicted_probs <- predict(model, data, type = "response")
+  
+  # Crear la curva ROC
+  roc_curve <- roc(data[[response_var]], predicted_probs)
+  
+  # Calcular el mejor umbral usando el criterio de Youden
+  best_threshold <- coords(roc_curve, "best", ret = "threshold", best.method = "youden")
+  
+  return(best_threshold)
+}
+
+# Función para calcular métricas de clasificación
+calculate_metrics <- function(model, data, response_var, best_threshold) {
+  # Predecir las probabilidades del modelo
+  prob_pred <- predict(model, data, type = "response")
+  
+  # Comprobar si las longitudes son iguales
+  if (length(prob_pred) != length(data[[response_var]])) {
+    stop("Las longitudes de las predicciones y la variable de respuesta no coinciden.")
+  }
+  
+  # Convertir las probabilidades a predicciones binarias usando el mejor umbral
+  pred_binary <- ifelse(prob_pred >= best_threshold[[1]], 1, 0)
+  
+  # Calcular la matriz de confusión
+  conf_matrix <- table(Predicted = pred_binary, Actual = data[[response_var]])
+  
+  # Calcular los indicadores de bondad de clasificación
+  accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+  sensitivity <- conf_matrix[2, 2] / sum(conf_matrix[, 2])
+  specificity <- conf_matrix[1, 1] / sum(conf_matrix[, 1])
+  precision <- conf_matrix[2, 2] / sum(conf_matrix[2, ])
+  f1_score <- 2 * (precision * sensitivity) / (precision + sensitivity)
+  
+  # Devolver los indicadores de bondad de clasificación
+  return(c(accuracy = accuracy, sensitivity = sensitivity, specificity = specificity, precision = precision, f1_score = f1_score))
+}
+
+# Función para comparar las métricas de dos modelos
+compare_models_metrics <- function(model1, model2, data, response_var) {
+  # Calcular los mejores umbrales usando el criterio de Youden
+  best_threshold1 <- calculate_best_threshold(model1, data, response_var)
+  best_threshold2 <- calculate_best_threshold(model2, data, response_var)
+  
+  # Calcular las métricas para ambos modelos
+  metrics1 <- calculate_metrics(model1, data, response_var, best_threshold1)
+  metrics2 <- calculate_metrics(model2, data, response_var, best_threshold2)
+  
+  # Crear una tabla comparativa
+  metrics_comparison <- data.frame(
+    Metric = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
+    Forward_model = metrics1,
+    Upper_model = metrics2
+  )
+  rownames(metrics_comparison)<- NULL
+
+  return(metrics_comparison)
+}
+
+
+```
+
+**Analisis ROC**
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+compare_roc_curves(forward_model_ohe,upper_model, testData, 'HeartDiseaseorAttack')
+```
+
+La gráfica muestra las curvas ROC comparativas del modelo completo y del
+modelo forward. Ambos modelos presentan un Área Bajo la Curva (AUC) de
+0.84, lo que indica una capacidad predictiva similar y buena
+discriminación entre las clases positivas y negativas. La similitud en
+las curvas ROC sugiere que el modelo forward, a pesar de incluir menos
+variables, mantiene una eficacia comparable al modelo completo en
+términos de sensibilidad y especificidad. Esto refuerza la conclusión de
+que las variables adicionales en el modelo completo no aportan una
+mejora significativa en la capacidad predictiva, permitiendo que el
+modelo forward sea preferido por su simplicidad y eficiencia.
+
+**Analisis tabla de desempeño**
+
+**Datos de entrenamiento**
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+formattable(compare_models_metrics(forward_model_ohe ,upper_model, trainData, 'HeartDiseaseorAttack'))
+```
+
+La tabla presenta una comparación de las métricas de rendimiento de los
+modelos de regresión logística optimizado mediante selección hacia
+adelante (Forward_model) y el modelo completo (Upper_model) utilizando
+datos de entrenamiento que representan el 70% del dataset completo.
+
+-   **Métricas Comparadas**: Exactitud: Ambos modelos tienen una
+    precisión muy similar, con el modelo forward alcanzando 0.7345713 y
+    el modelo completo 0.7352930. Esta ligera diferencia indica que
+    ambos modelos son igualmente efectivos en términos de clasificación
+    general correcta.
+
+-   **Sensibilidad**: La sensibilidad, que mide la capacidad del modelo
+    para identificar correctamente los casos positivos, es prácticamente
+    idéntica entre ambos modelos, con el modelo forward en 0.8066503 y
+    el modelo completo en 0.8056396. Esto sugiere que ambos modelos
+    tienen una capacidad casi equivalente para detectar correctamente la
+    condición positiva.
+
+-   **Especificidad**: La especificidad, que mide la capacidad del
+    modelo para identificar correctamente los casos negativos, también
+    es muy similar entre los dos modelos, con 0.7270696 para el modelo
+    forward y 0.7279721 para el modelo completo.
+
+-   **Precision**: La precisión, que mide la proporción de verdaderos
+    positivos sobre el total de predicciones positivas, es casi igual en
+    ambos modelos, con valores de 0.2352408 para el modelo forward y
+    0.2356100 para el modelo completo.
+
+-   **F1 Score**: El F1 Score, que es la media armónica de la precisión
+    y la sensibilidad, muestra valores casi idénticos para ambos modelos
+    (0.3642550 para el modelo forward y 0.3645935 para el modelo
+    completo), lo que indica un equilibrio similar entre precisión y
+    sensibilidad en ambos modelos.
+
+Las métricas indican que el modelo optimizado mediante selección hacia
+adelante (Forward_model) tiene un rendimiento casi idéntico al modelo
+completo (Upper_model) en los datos de entrenamiento. Dado que el modelo
+forward utiliza menos variables, ofrece un ajuste más eficiente sin
+sacrificar la precisión predictiva. Esto sugiere que el modelo forward
+es preferible para su uso práctico, ya que mantiene la simplicidad y la
+eficiencia sin comprometer la capacidad predictiva.
+
+**Datos de validación**
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+formattable(compare_models_metrics(forward_model_ohe,upper_model, testData, 'HeartDiseaseorAttack'))
+```
+
+La tabla presenta una comparación de las métricas de rendimiento de los
+modelos de regresión logística optimizado mediante selección hacia
+adelante (Forward_model) y el modelo completo (Upper_model) utilizando
+datos de validación que representan el 30% del dataset completo.
+
+-   **Exactitud**: El modelo forward muestra una precisión superior
+    (0.7296106) en comparación con el modelo completo (0.7100368). Esta
+    diferencia indica que el modelo forward clasifica correctamente un
+    mayor porcentaje de observaciones en los datos de validación.
+
+-   **Sensibilidad**: La sensibilidad es ligeramente menor en el modelo
+    forward (0.8101230) en comparación con el modelo completo
+    (0.8344519). Esto sugiere que el modelo completo es un poco mejor en
+    detectar casos positivos, aunque la diferencia no es muy grande.
+
+-   **Especificidad**: La especificidad es mayor en el modelo forward
+    (0.7212493) en comparación con el modelo completo (0.6971162). Esto
+    indica que el modelo forward es más eficaz en identificar
+    correctamente los casos negativos.
+
+-   **Precisión**: La precisión es ligeramente mayor en el modelo
+    forward (0.2318435) en comparación con el modelo completo
+    (0.2224624). Esto sugiere que el modelo forward tiene una mejor
+    proporción de verdaderos positivos sobre el total de predicciones
+    positivas.
+
+-   **F1 Score**: El F1 Score, que es la media armónica de la precisión
+    y la sensibilidad, es mayor en el modelo forward (0.3605140) en
+    comparación con el modelo completo (0.3512758). Esto indica un mejor
+    equilibrio entre precisión y sensibilidad en el modelo forward.
+
+Las métricas de validación indican que el modelo optimizado mediante
+selección hacia adelante (Forward_model) tiene un rendimiento superior
+al modelo completo (Upper_model) en términos de exactitud,
+especificidad, precisión y F1 Score en los datos de validación. Aunque
+la sensibilidad es ligeramente menor en el modelo forward, las demás
+métricas sugieren que este modelo es más eficaz en general. Dado que el
+modelo forward utiliza menos variables, proporciona un ajuste más
+eficiente sin comprometer significativamente la capacidad predictiva, lo
+que lo convierte en una mejor opción para la implementación práctica.
+
+# Interpretación del mejor modelo
+
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
+summary(forward_model_ohe)
+```
+
+Interpretación de los coeficientes del Modelo
+
+Coeficientes con Valores p \< 0.05).
+
+-   Intercepto: La intersección del modelo es -6.711839, lo que
+    representa el logaritmo de las probabilidades de la variable de
+    respuesta cuando todas las variables predictoras son cero.
+
+-   Age: Un aumento en la edad está asociado con un aumento
+    significativo en la probabilidad de sufrir un ataque cardíaco
+    (coeficiente = 0.260881, p \< 2e-16).
+
+-   DiffWalk: La dificultad para caminar está significativamente
+    asociada con un aumento en la probabilidad de sufrir un ataque
+    cardíaco (coeficiente = 0.351757, p \< 2e-16).
+
+-   HighBP y HighChol: Tener presión arterial alta y colesterol alto
+    también están significativamente asociados con un mayor riesgo de
+    ataque cardíaco (coeficientes = 0.536763 y 0.629020,
+    respectivamente, p \< 2e-16).
+
+-   Sex: Ser hombre está asociado con un mayor riesgo de ataque cardíaco
+    (coeficiente = 0.765140, p \< 2e-16).
+
+-   PhysActivity y Smoker: La actividad física y el hecho de fumar
+    también muestran una asociación significativa (coeficientes =
+    0.069754 y 0.353099, respectivamente, p \< 2e-16).
+
+-   MentHlth y PhysHlth: La salud mental y física también tienen un
+    impacto significativo, aunque menor, en el riesgo (coeficientes =
+    0.003270 y 0.002148, respectivamente).
+
+-   Diabetes.2: Tener diabetes (segundo tipo) está asociado con un mayor
+    riesgo (coeficiente = 0.324094, p \< 2e-16). GenHlth: Las variables
+    relacionadas con la salud general (GenHlth.2, GenHlth.3, GenHlth.4,
+    GenHlth.5) muestran un impacto significativo en la probabilidad de
+    ataque cardíaco, con coeficientes crecientes a medida que la salud
+    general empeora.
+
+-   Income: Los ingresos también tienen un impacto significativo, con
+    niveles de ingresos más altos asociados con un menor riesgo de
+    ataque cardíaco (coeficientes negativos y significativos para
+    Income.4, Income.5, Income.6, Income.7, Income.8).
+
+Variables One-Hot Encoding.
+
+Aunque algunas variables como Diabetes.1 y algunas categorías de
+Education no son significativas por sí mismas, se han mantenido en el
+modelo debido a su inclusión en conjuntos de variables one-hot encoding.
+Esta decisión se toma para mantener la integridad del modelo y permitir
+una interpretación coherente de las categorías completas.
+
+Métricas del Modelo
+
+Null deviance: 110792, indicando el ajuste del modelo sin predictores.
+
+Residual deviance: 85859, indicando el ajuste del modelo con los
+predictores incluidos.
+
+AIC: 85915, utilizado para comparar modelos; un AIC más bajo indica un
+mejor equilibrio entre ajuste y complejidad del modelo.
+
+En conclusión, el modelo final incluye una combinación de variables
+significativas que proporcionan una visión integral de los factores que
+afectan la probabilidad de sufrir un ataque cardíaco. Las variables de
+edad, sexo, salud general, presión arterial alta, colesterol alto y
+factores de estilo de vida como la actividad física y el tabaquismo, son
+importantes predictores en este contexto. Las variables categóricas
+one-hot encoding se mantuvieron en el modelo para asegurar una
+representación completa de sus efectos. Este modelo demuestra un
+equilibrio adecuado entre complejidad y precisión predictiva,
+proporcionando una herramienta útil para identificar individuos en
+riesgo de ataque cardíaco o enfermedad cardíaca basándose en un conjunto
+amplio de factores demográficos, de salud y de estilo de vida.
+
+La inclusión de variables como GenHlth y los diferentes niveles de
+ingreso destaca la importancia de la percepción de la salud general y la
+situación socioeconómica en la predicción del riesgo de enfermedad
+cardíaca. Las métricas del modelo, con una deviance residual
+significativamente menor que la deviance nula y un AIC razonable,
+indican un buen ajuste del modelo a los datos de entrenamiento. En
+resumen, este modelo puede ser utilizado para predecir el riesgo de
+enfermedad cardíaca y guiar intervenciones preventivas específicas.
+
+Ecuación del modelo
+
+$$
+P(\text{HeartDiseaseorAttack} = 1) = \frac{1}{1 + e^{-\left(
+-6.711839 + 0.260881 \times \text{Age} + 0.351757 \times \text{DiffWalk} + 0.536763 \times \text{HighBP} + 0.765140 \times \text{Sex} +
+0.629020 \times \text{HighChol} + 0.069754 \times \text{PhysActivity} + 0.353099 \times \text{Smoker} + 0.003270 \times \text{MentHlth} +
+0.002148 \times \text{PhysHlth} + 0.034439 \times \text{Diabetes.1} + 0.324094 \times \text{Diabetes.2} - 0.270593 \times \text{Education.2} -
+0.142184 \times \text{Education.3} - 0.151937 \times \text{Education.4} - 0.037254 \times \text{Education.5} - 0.129554 \times \text{Education.6} +
+0.442924 \times \text{GenHlth.2} + 0.984189 \times \text{GenHlth.3} + 1.518628 \times \text{GenHlth.4} + 1.977652 \times \text{GenHlth.5} -
+0.012619 \times \text{Income.2} - 0.081519 \times \text{Income.3} - 0.120891 \times \text{Income.4} - 0.213984 \times \text{Income.5} -
+0.245069 \times \text{Income.6} - 0.278031 \times \text{Income.7} - 0.400422 \times \text{Income.8}
+\right)}}
+$$
+
+## CONCLUSIONES
+
+La selección hacia adelante, o forward selection, es un método iterativo
+para construir modelos de regresión que comienza con un modelo nulo y
+agrega variables predictoras una a una. En cada paso, se evalúa el
+impacto de añadir cada variable utilizando el criterio de información de
+Akaike (AIC) y se selecciona la variable que más reduce el AIC. Este
+proceso se repite hasta que no se puede mejorar más el AIC, resultando
+en un modelo optimizado que equilibra el ajuste del modelo (medido por
+la deviance) y su simplicidad. Se realizó la selección hacia adelante
+comenzando con un modelo nulo y agregando variables predictoras hasta
+obtener un modelo optimizado. Este enfoque permitió identificar las
+variables más significativas, resultando en un modelo más parsimonioso
+que el modelo completo inicial. El análisis comparativo mostró que el
+modelo optimizado por forward selection ofrece un rendimiento predictivo
+similar al modelo completo, con una reducción en el AIC y una deviance
+más baja, sin sacrificar la precisión. Por tanto, se concluye que el
+modelo forward es preferible por su simplicidad y eficiencia,
+manteniendo una capacidad predictiva comparable.
+
+Se identificaron exitosamente las variables categóricas y numéricas del
+conjunto de datos y se llevó a cabo un análisis estadístico de las
+medidas de tendencia central, lo que permitió detectar posibles valores
+atípicos. Se encontraron outliers en las variables BMI, MentHlth,
+PhysHlth y Age. Para abordar estos outliers, se eliminaron los valores
+de BMI que excedían los límites razonables definidos por la OMS. Además,
+se observó que la variable de respuesta, HeartDiseaseorAttack, estaba
+significativamente desbalanceada, lo que puede haber afectado el
+desempeño del modelo predictivo. Para balancear las clases y mejorar el
+desempeño, se podrían utilizar técnicas como sobremuestreo de la clase
+minoritaria, submuestreo de la clase mayoritaria o generación de datos
+sintéticos con métodos como SMOTE. Eliminar características
+desbalanceadas, como CholCheck, Stroke, HvyAlcoholConsump, AnyHealthcare
+y NoDocbcCost, es válido ya que representan un porcentaje insignificante
+de la población. A continuación, se normalizaron las variables numéricas
+utilizando la normalización Min-Max y se aplicó one-hot encoding a las
+variables categóricas. Finalmente, los datos se dividieron en un 70%
+para entrenamiento y un 30% para validación, manteniendo la proporción
+de clases desbalanceadas.
+
+En este proyecto se cumplieron satisfactoriamente los objetivos
+planteados. Se desarrolló un modelo de clasificación binaria para
+predecir la probabilidad de padecer un ataque cardiaco, logrando el
+objetivo general. A nivel de objetivos específicos, se realizó un
+exhaustivo análisis exploratorio de datos (AED) que permitió identificar
+y entender la dinámica del conjunto de datos. Se definieron las
+características más representativas mediante técnicas de selección de
+variables, y se estableció que el modelo optimizado mediante selección
+hacia adelante (forward selection) es el que presenta el mejor
+desempeño, manteniendo un equilibrio adecuado entre simplicidad y
+capacidad predictiva.
